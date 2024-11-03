@@ -22,7 +22,6 @@
 
 #import <TransformerKit/NSValueTransformer+TransformerKit.h>
 
-@import Darwin.Availability;
 @import ObjectiveC.runtime;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -33,7 +32,10 @@ NS_ASSUME_NONNULL_BEGIN
                    transformedValueClass:(Class)transformedValueClass
       returningTransformedValueWithBlock:(id (^)(id value))transformedValueBlock
 {
-    return [self registerValueTransformerWithName:name transformedValueClass:transformedValueClass returningTransformedValueWithBlock:transformedValueBlock allowingReverseTransformationWithBlock:nil];
+    return [self registerValueTransformerWithName:name
+                            transformedValueClass:transformedValueClass
+               returningTransformedValueWithBlock:transformedValueBlock
+           allowingReverseTransformationWithBlock:nil];
 }
 
 + (BOOL)registerValueTransformerWithName:(NSString *)name
@@ -59,15 +61,20 @@ NS_ASSUME_NONNULL_BEGIN
         return transformedValueClass;
     });
     Method transformedValueClassMethod = class_getClassMethod(class, transformedValueClassSelector);
-    class_replaceMethod(class, transformedValueClassSelector, transformedValueClassImplementation, method_getTypeEncoding(transformedValueClassMethod));
-    
+    class_replaceMethod(class, transformedValueClassSelector,
+                        transformedValueClassImplementation,
+                        method_getTypeEncoding(transformedValueClassMethod));
+
     SEL transformedValueSelector = @selector(transformedValue:);
     IMP transformedValueImplementation = imp_implementationWithBlock(^id (id __unused _self, id _value){
         return transformedValueBlock(_value);
     });
     Method transformedValueMethod = class_getInstanceMethod(class, transformedValueSelector);
-    class_replaceMethod(class, transformedValueSelector, transformedValueImplementation, method_getTypeEncoding(transformedValueMethod));
-    
+    class_replaceMethod(class,
+                        transformedValueSelector,
+                        transformedValueImplementation,
+                        method_getTypeEncoding(transformedValueMethod));
+
     if (reverseTransformedValueBlock) {
         SEL allowsReverseTransformationSelector = @selector(allowsReverseTransformation);
         IMP allowsReverseTransformationImplementation = imp_implementationWithBlock(^BOOL (id __unused _self) {
@@ -90,7 +97,10 @@ NS_ASSUME_NONNULL_BEGIN
             return reverseTransformedValueBlock(_value);
         });
         Method reverseTransformedValueMethod = class_getInstanceMethod(class, reverseTransformedValueSelector);
-        class_replaceMethod(class, reverseTransformedValueSelector, reverseTransformedValueImplementation, method_getTypeEncoding(reverseTransformedValueMethod));
+        class_replaceMethod(class,
+                            reverseTransformedValueSelector,
+                            reverseTransformedValueImplementation,
+                            method_getTypeEncoding(reverseTransformedValueMethod));
     }
     
     objc_registerClassPair(class);
